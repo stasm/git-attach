@@ -1,0 +1,27 @@
+{
+  "name": "git-attach",
+  "description": "git extension for attaching patches to bugzilla",
+  "version": "0.0.1",
+  "author": {
+    "name": "Stas Malolepszy",
+    "email": "stas@mozilla.com",
+    "url": "http://informationisart.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stasm/git-attach.git"
+  },
+  "dependencies": {
+    "bz": "~0.2.5",
+    "editor": "0.0.5",
+    "co-exec": "~1.1.0",
+    "netrc": "git://github.com/stasm/netrc.git#windows",
+    "tmp": "0.0.21",
+    "co": "~1.5.2",
+    "co-prompt": "~1.0.0",
+    "nomnom": "~1.6.1"
+  },
+  "bin": {
+    "git-attach": "./index.js"
+  }
+}
