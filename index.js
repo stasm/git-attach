@@ -136,7 +136,7 @@ co(function*(){
       console.error('No valid bug ID found in the current branch name');
       process.exit(1);
     }
-    opts.bug = parseInt(matches[2]);
+    opts.bug = parseInt(matches[1]);
   }
 
   if (!opts.description) {
@@ -174,13 +174,14 @@ co(function*(){
     encoding: 'base64',
     description: opts.description,
     comments: [{
-      text: opts.flag
+      text: opts.comment
     }],
-    flags: requestedFlags
+    flags: opts.flag
   }
 
   // post
   var att = yield bugzilla.createAttachment(opts.bug, attachment);
-  console.log('https://bugzilla.mozilla.org/attachment.cgi?id=' + att + '&action=edit');
+  console.log('https://bugzilla.mozilla.org/attachment.cgi?id=' + att + 
+              '&action=edit');
   process.exit(0);
 });
