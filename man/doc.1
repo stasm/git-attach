@@ -1,0 +1,153 @@
+.\" Generated with Ronnjs 0.4.0
+.\" http://github.com/kapouer/ronnjs
+.
+.TH "GIT\-ATTACH" "1" "September 2013" "" ""
+.
+.SH "NAME"
+\fBgit-attach\fR \-\- Attach diff as patch to Bugzilla
+.
+.SH "SYNOPSIS"
+.
+.nf
+git attach [options] [<range>]
+.
+.fi
+.
+.SH "DESCRIPTION"
+Attach the output of \fBgit\-diff <range>\fR to a bug in Bugzilla\.  The default 
+range is "master\.\.\.HEAD"\.  The bug number can be specified excplicitly with  \fB\-\-bug <id>\fR or will be extracted from the current branch name (see  \fB\-\-bug\-regexp\fR)\.
+.
+.P
+For options not provided on the command line, \fBgit\-attach\fR will interactively 
+ask for user input\.
+.
+.P
+If \fB\-\-username\fR and \fB\-\-password\fR are not given, \fBgit\-attach\fR will try to read  \fB$HOME/\.netrc\fR\|\.  See AUTHENTICATION for more information\.
+.
+.P
+\fBgit\-attach\fR currently only works with bugzilla\.mozilla\.org\.
+.
+.SH "EXAMPLES"
+.
+.nf
+git attach master\.\.\.HEAD
+git attach v1\-train\.\.\.bug900000\-feature\-branch
+git attach \-\-bug 900000
+.
+.fi
+.
+.SH "OPTIONS"
+.
+.IP "\(bu" 4
+\fB\-b <id>, \-\-bug <id>\fR
+.
+.IP
+The id of the bug to attach the patch to\.  If not given, \fBgit\-attach\fR will 
+try to parse the current branch name and extract the bug id from it\.  See  \fB\-\-bug\-regexp\fR\|\.
+.
+.IP "\(bu" 4
+\fB\-r <regexp>, \-\-bug\-regexp <regexp>\fR
+.
+.IP
+\fBgit\-attach\fR will use <regexp> to try to extract the bug number from the 
+curent branch name, if no bug number was given with \fB\-\-bug\fR\|\.  The first 
+parenthesized substring match will be used\.  The default regexp is:
+.
+.IP "" 4
+.
+.nf
+^(?:bug\-?)?(\\\\d{5,})
+.
+.fi
+.
+.IP "" 0
+
+.
+.IP "\(bu" 4
+\fB\-f <flag>, \-\-flag <flag>\fR
+.
+.IP
+A flag to be requested on the attachment\.  Supported flags: \fBreview\fR,  \fBfeedback\fR\|\.  The <flag> argument should be specified in the 
+"flagname?requestee" syntax, e\.g\.
+.
+.IP "" 4
+.
+.nf
+git attach \-\-flag "review?:stas"
+.
+.fi
+.
+.IP "" 0
+.
+.IP
+Specifying more than one flag is allowed, e\.g\.
+.
+.IP "" 4
+.
+.nf
+git attach \-\-flag "review?:stas" \-\-flag "feedback?:l10n"
+.
+.fi
+.
+.IP "" 0
+
+.
+.IP "\(bu" 4
+\fB\-d <text>, \-\-description <text>\fR
+.
+.IP
+A short one\-line description of the patch which will be used as the name of 
+the attachment\.
+.
+.IP "\(bu" 4
+\fB\-c <text>, \-\-comment <text>\fR
+.
+.IP
+A longer comment accompanying the attachment\.
+.
+.IP "\(bu" 4
+\fB\-u <username>, \-\-username <username>\fR
+.
+.IP
+Bugzilla username for authentication with the API\.
+.
+.IP "\(bu" 4
+\fB\-p <password>, \-\-password <password>\fR
+.
+.IP
+Bugzilla password for authentication with the API\.
+.
+.IP "" 0
+.
+.SH "AUTHENTICATION"
+Bugzilla credentials can be passed excplicitly on the command line with  \fB\-\-username\fR and \fB\-\-password\fR options\.
+.
+.P
+If not given, \fBgit\-attach\fR will try to read \fB$HOME/\.netrc\fR (or \fB%HOME%\\_netrc\fR 
+on Windows)\.  The format of a \fB\|\.netrc\fR file is as follows:
+.
+.IP "" 4
+.
+.nf
+machine api\-dev\.bugzilla\.mozilla\.org
+login your\.email\.address@example\.com
+password P455w0rd
+.
+.fi
+.
+.IP "" 0
+.
+.P
+If \fB\|\.netrc\fR is not found or doesn\'t contain the credentials for 
+api\-dev\.bugzilla\.mozilla\.org, git\-attach will interactively ask for the 
+username and password\.
+.
+.SH "SEE ALSO"
+.
+.nf
+git\-diff(1)
+.
+.fi
+.
+.SH "REPORTING BUGS"
+Report bugs at https://github\.com/stasm/git\-attach/issues\.
