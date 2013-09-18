@@ -14,7 +14,7 @@
   "bin": {
     "git-attach": "./index.js"
   },
-  "man": "./man/doc.1",
+  "man": "./man/git-attach.1",
   "engines" : { 
     "node" : ">=0.11"
   },

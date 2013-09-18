@@ -1,4 +1,4 @@
-all: man/doc.1
+all: man/git-attach.1
 
-man/%.1: man/%.md
+man/git-attach.1: man/git-attach.md
 	@./node_modules/.bin/ronn --roff $< > $@
