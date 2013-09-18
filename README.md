@@ -38,6 +38,16 @@ If this doesn't work, you can resort to invoking Node.js manually:
 
     /usr/bin/nodejs --harmony-generators ./index.js
 
+## Changelog
+
+ - 0.0.2 (September 18, 2013)
+
+   - query the bug for existing patches and obsolete them upon user's request
+
+ - 0.0.1 (September 18, 2013)
+
+   - attach the output of git-diff
+
 
 ## Related projects
 

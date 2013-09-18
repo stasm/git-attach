@@ -1,7 +1,7 @@
 {
   "name": "git-attach",
   "description": "git extension for attaching patches to bugzilla",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": {
     "name": "Stas Malolepszy",
     "email": "stas@mozilla.com",
