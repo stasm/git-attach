@@ -105,7 +105,9 @@ function getBzAPIClient(credentials) {
   });
 
   return {
-    createAttachment: co.wrap(client.createAttachment, client)
+    bugAttachments: co.wrap(client.bugAttachments, client),
+    createAttachment: co.wrap(client.createAttachment, client),
+    updateAttachment: co.wrap(client.updateAttachment, client)
   };
 }
 
@@ -127,6 +129,7 @@ co(function*(){
       credentials.password = yield prompt.password('Bugzilla password: ');
     }
   }
+
   var bugzilla = getBzAPIClient(credentials);
 
   if (!opts.bug) {
@@ -139,8 +142,38 @@ co(function*(){
     opts.bug = parseInt(matches[1]);
   }
 
+
+  // obsolete old patches
+  // XXX ideally, the bugAttachments request would happen in parallel with the 
+  // user writing the comment
+  console.log('Getting existing attachments…');
+  var prevAttachments = yield bugzilla.bugAttachments(opts.bug);
+  var prevPatches = prevAttachments.filter(function(attachment) {
+    return attachment.is_patch && !attachment.is_obsolete;
+  });
+  if (prevPatches.length) {
+    prevPatches.forEach(function(patch, i) {
+      console.log('  '  + (i + 1) + ') ' + patch.description +
+                  ' (by ' + patch.attacher.name + ')'); });
+    var toObsolete = yield prompt('Patch numbers to obsolete ' +
+                                  '(space-separated)? ');
+    toObsolete = toObsolete.split(' ').filter(function(part) {
+      return part !== '';
+    });
+    var okResponses = yield toObsolete.map(function(index) {
+      var patch = prevPatches[parseInt(index) - 1];
+      patch.is_obsolete = true;
+      return bugzilla.updateAttachment(patch.id, patch);
+    });
+    console.log(okResponses.length + ' obsoleted.');
+  }
+
   if (!opts.description) {
     opts.description = yield prompt('One-line description: ');
+    if (!opts.description) {
+      console.error('Patch description is required');
+      process.exit(1);
+    }
   }
 
   if (!opts.comment || opts.comment === '') {
@@ -180,8 +213,10 @@ co(function*(){
   }
 
   // post
+  console.log('Submitting the patch…');
   var att = yield bugzilla.createAttachment(opts.bug, attachment);
-  console.log('https://bugzilla.mozilla.org/attachment.cgi?id=' + att + 
+  console.log('Patch submitted!');
+  console.log('  https://bugzilla.mozilla.org/attachment.cgi?id=' + att + 
               '&action=edit');
   process.exit(0);
 });
