@@ -25,9 +25,9 @@ If `--username` and `--password` are not given, `git-attach` will try to read
 
 ## EXAMPLES
 
-    git attach master...HEAD
-    git attach v1-train...bug900000-feature-branch
+    git attach master...
     git attach --bug 900000
+    git attach v1-train...bug900000-feature-branch
 
 
 ## OPTIONS
