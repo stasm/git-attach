@@ -37,3 +37,15 @@ you should be able to run `git-attach` as follows:
 If this doesn't work, you can resort to invoking Node.js manually:
 
     /usr/bin/nodejs --harmony-generators ./index.js
+
+
+## Related projects
+
+ - [git-bz][] - written in Python, supports sending & fetching patches, filing 
+   new bugs and closing existing ones,
+
+ - [pybugzilla][] - written in Python, supports sending patches and fetching 
+   them, as well as submitting pull requests.
+
+[git-bz]: http://git.fishsoup.net/cgit/git-bz/tree/git-bz.txt
+[pybugzilla]: https://github.com/toolness/pybugzilla
