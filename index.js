@@ -49,7 +49,7 @@ var opts = nomnom.options({
   range: {
     metavar: 'RANGE',
     position: 0,
-    default: 'master...HEAD',
+    default: '',
     help: 'git-revisions-style range of commits to diff'
   },
   test: {

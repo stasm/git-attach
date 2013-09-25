@@ -9,10 +9,15 @@ git-attach(1) - Attach diff as patch to Bugzilla
 
 ## DESCRIPTION
 
-Attach the output of `git-diff <range>` to a bug in Bugzilla.  The default 
-range is "master...HEAD".  The bug number can be specified excplicitly with 
-`--bug <id>` or will be extracted from the current branch name (see 
-`--bug-regexp`).
+Attach the output of `git-diff` to a bug in Bugzilla.  Arguments passed to 
+`git-attach` will be the arguments which `git-diff` will be invoked with.  For 
+instance, `git attach master...` will attach the output of `git diff 
+master...`.  If `<range>` is not given, `git-attach` will invoke `git-diff` 
+with no arguments, resulting in the diff between the working copy and the 
+index. 
+
+The bug number can be specified explicitly with `--bug <id>` or will be 
+extracted from the current branch name (see `--bug-regexp`).
 
 For options not provided on the command line, `git-attach` will interactively 
 ask for user input.

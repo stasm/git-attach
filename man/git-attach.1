@@ -14,8 +14,15 @@ git attach [options] [<range>]
 .fi
 .
 .SH "DESCRIPTION"
-Attach the output of \fBgit\-diff <range>\fR to a bug in Bugzilla\.  The default 
-range is "master\.\.\.HEAD"\.  The bug number can be specified excplicitly with  \fB\-\-bug <id>\fR or will be extracted from the current branch name (see  \fB\-\-bug\-regexp\fR)\.
+Attach the output of \fBgit\-diff\fR to a bug in Bugzilla\.  Arguments passed to  \fBgit\-attach\fR will be the arguments which \fBgit\-diff\fR will be invoked with\.  For 
+instance, \fBgit attach master\.\.\.\fR will attach the output of \fBgit diff 
+master\.\.\.\fR\|\.  If \fB<range>\fR is not given, \fBgit\-attach\fR will invoke \fBgit\-diff\fR 
+with no arguments, resulting in the diff between the working copy and the 
+index\. 
+.
+.P
+The bug number can be specified explicitly with \fB\-\-bug <id>\fR or will be 
+extracted from the current branch name (see \fB\-\-bug\-regexp\fR)\.
 .
 .P
 For options not provided on the command line, \fBgit\-attach\fR will interactively 
@@ -30,9 +37,9 @@ If \fB\-\-username\fR and \fB\-\-password\fR are not given, \fBgit\-attach\fR wi
 .SH "EXAMPLES"
 .
 .nf
-git attach master\.\.\.HEAD
-git attach v1\-train\.\.\.bug900000\-feature\-branch
+git attach master\.\.\.
 git attach \-\-bug 900000
+git attach v1\-train\.\.\.bug900000\-feature\-branch
 .
 .fi
 .
