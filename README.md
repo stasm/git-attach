@@ -46,6 +46,13 @@ If this doesn't work, you can resort to invoking Node.js manually:
 
 ## Changelog
 
+ - 0.0.3 (September 25, 2013)
+
+   - pass arguments to `git-diff` without any modifications, also when no 
+     arguments are present (previously, `master...HEAD` was assumed by default 
+     which made it impossible to attach a diff between the current working copy 
+     and the index)
+
  - 0.0.2 (September 18, 2013)
 
    - query the bug for existing patches and obsolete them upon user's request
