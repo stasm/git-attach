@@ -65,83 +65,27 @@ if (opts.test) {
   availableFlags.review = 1;
 }
 
-function parseFlag(str) {
-  var parts = str.split('?');
-  if (parts.length !== 2) {
-    console.error('Set a flag using the flagname?requestee syntax');
-    process.exit(1);
-  }
-  if (!(parts[0] in availableFlags)) {
-    console.error('Flag not supported: ' + parts[0]);
-    process.exit(1);
-  }
-  return new Flag(parts[0], parts[1]);
-}
-
-function Flag(name, requestee) {
-  this.name = name;
-  this.type_id = availableFlags[name];
-  this.status = '?';
-  this.requestee = { name: requestee };
-}
-
-var edit = co.wrap(editor);
-var temp = co.wrap(tmp.file);
-
-// XXX use co-fs when fixed in node 0.11
-// https://github.com/visionmedia/co-fs/issues/2
-// var fs = require('co-fs');
-function readFile(path, encoding) {
-  return function(cb){
-    fs.readFile(path, encoding, cb);
-  }
-}
-
-function getBzAPIClient(credentials) {
-  var client = bz.createClient({
-    username: credentials.login,
-    password: credentials.password,
-    test: opts.test
-  });
-
-  return {
-    bugAttachments: co.wrap(client.bugAttachments, client),
-    createAttachment: co.wrap(client.createAttachment, client),
-    updateAttachment: co.wrap(client.updateAttachment, client)
-  };
-}
-
-
-
 co(function*(){
 
-  var credentials = {};
-  if (opts.username && opts.password) {
-    credentials.login = opts.username;
-    credentials.password = opts.password;
-  } else if (opts.username) {
-    credentials.login = opts.username;
-    credentials.password = yield prompt.password('Bugzilla password: ');
-  } else {
-    credentials = netrc()['api-dev.bugzilla.mozilla.org'];
-    if (!credentials) {
-      credentials.login = yield prompt('Bugzilla username: ');
-      credentials.password = yield prompt.password('Bugzilla password: ');
-    }
-  }
-
-  var bugzilla = getBzAPIClient(credentials);
+  var bugzilla = yield getAuthenticatedBugzillaClient();
 
   if (!opts.bug) {
-    var branch = yield exec('git rev-parse --abbrev-ref HEAD');
-    var matches = reBug.exec(branch.trim())
-    if (!matches) {
-      console.error('No valid bug ID found in the current branch name');
-      process.exit(1);
-    }
-    opts.bug = parseInt(matches[1]);
+    opts.bug = yield getBugNumber();
   }
 
+  if (!opts.description) {
+    opts.description = yield getDescription();
+  }
+
+  if (!opts.comment || opts.comment === '') {
+    opts.comment = yield getComment();
+  }
+
+  if (opts.flag) {
+    opts.flag = opts.flag.map(parseFlag);
+  } else {
+    opts.flag = yield getFlags();
+  }
 
   // obsolete old patches
   // XXX ideally, the bugAttachments request would happen in parallel with the 
@@ -156,7 +100,7 @@ co(function*(){
       console.log('  '  + (i + 1) + ') ' + patch.description +
                   ' (by ' + patch.attacher.name + ')'); });
     var toObsolete = yield prompt('Patch numbers to obsolete ' +
-                                  '(space-separated)? ');
+                                  '(space-separated, Enter for none)? ');
     toObsolete = toObsolete.split(' ').filter(function(part) {
       return part !== '';
     });
@@ -168,37 +112,7 @@ co(function*(){
     console.log(okResponses.length + ' obsoleted.');
   }
 
-  if (!opts.description) {
-    opts.description = yield prompt('One-line description: ');
-    if (!opts.description) {
-      console.error('Patch description is required');
-      process.exit(1);
-    }
-  }
-
-  if (!opts.comment || opts.comment === '') {
-    // tmpFile is [path, descriptor]
-    var tmpFile = yield temp({ postfix: '.markdown' });
-    process.stdin.pause();
-    yield edit(tmpFile[0]);
-    opts.comment = yield readFile(tmpFile[0], 'utf8');
-  }
-
-  if (opts.flag) {
-    opts.flag = opts.flag.map(parseFlag);
-  } else {
-    opts.flag = [];
-    for (var flag in availableFlags) {
-      if (!availableFlags.hasOwnProperty(flag)) {
-        continue;
-      }
-      var requestee = yield prompt(flag + '? ');
-      if (requestee) {
-        opts.flag.push(new Flag(flag, requestee));
-      }
-    }
-  }
-
+  // create patch
   var diff = yield exec('git diff ' + opts.range);
   var attachment = {
     file_name: opts.bug + '.patch',
@@ -220,3 +134,116 @@ co(function*(){
               '&action=edit');
   process.exit(0);
 });
+
+
+function Flag(name, requestee) {
+  this.name = name;
+  this.type_id = availableFlags[name];
+  this.status = '?';
+  this.requestee = { name: requestee };
+}
+
+function parseFlag(str) {
+  var parts = str.split('?');
+  if (parts.length !== 2) {
+    console.error('Set a flag using the flagname?requestee syntax');
+    process.exit(1);
+  }
+  if (!(parts[0] in availableFlags)) {
+    console.error('Flag not supported: ' + parts[0]);
+    process.exit(1);
+  }
+  return new Flag(parts[0], parts[1]);
+}
+
+function getAuthenticatedBugzillaClient() {
+  return function*() {
+    var credentials = {};
+    if (opts.username && opts.password) {
+      credentials.login = opts.username;
+      credentials.password = opts.password;
+    } else if (opts.username) {
+      credentials.login = opts.username;
+      credentials.password = yield prompt.password('Bugzilla password: ');
+    } else {
+      credentials = netrc()['api-dev.bugzilla.mozilla.org'];
+      if (!credentials) {
+        credentials.login = yield prompt('Bugzilla username: ');
+        credentials.password = yield prompt.password('Bugzilla password: ');
+      }
+    }
+
+    var client = bz.createClient({
+      username: credentials.login,
+      password: credentials.password,
+      test: opts.test
+    });
+
+    return {
+      bugAttachments: co.wrap(client.bugAttachments, client),
+      createAttachment: co.wrap(client.createAttachment, client),
+      updateAttachment: co.wrap(client.updateAttachment, client)
+    };
+  };
+}
+
+function getBugNumber() {
+  return function*() {
+    var branch = yield exec('git rev-parse --abbrev-ref HEAD');
+    var matches = reBug.exec(branch.trim())
+    if (!matches) {
+      console.error('No valid bug ID found in the current branch name');
+      process.exit(1);
+    }
+    return parseInt(matches[1]);
+  }
+}
+
+function getDescription() {
+  return function*() {
+    var description = yield prompt('One-line description: ');
+    if (!description) {
+      console.error('Patch description is required');
+      process.exit(1);
+    }
+    return description;
+  };
+}
+
+function getComment() {
+  var temp = co.wrap(tmp.file);
+  var edit = co.wrap(editor);
+
+  // XXX use co-fs when fixed in node 0.11
+  // https://github.com/visionmedia/co-fs/issues/2
+  // var fs = require('co-fs');
+  function readFile(path, encoding) {
+    return function(cb){
+      fs.readFile(path, encoding, cb);
+    }
+  }
+
+  return function*() {
+    // tmpFile is [path, descriptor]
+    var tmpFile = yield temp({ postfix: '.markdown' });
+    process.stdin.pause();
+    yield edit(tmpFile[0]);
+    return yield readFile(tmpFile[0], 'utf8');
+  };
+}
+
+function getFlags() {
+  return function*() {
+    flags = [];
+    for (var flag in availableFlags) {
+      if (!availableFlags.hasOwnProperty(flag)) {
+        continue;
+      }
+      var requestee = yield prompt(flag + '? ');
+      if (requestee) {
+        flags.push(new Flag(flag, requestee));
+      }
+    }
+    return flags;
+  };
+}
